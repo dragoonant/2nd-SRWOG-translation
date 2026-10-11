@@ -35,7 +35,7 @@ REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import fitcheck  # noqa: E402
 
-WORK = r"C:\Users\you\srw2og-work"
+WORK = os.path.join(os.path.expanduser("~"), "srw2og-work")
 STATE_DIR = os.path.join(REPO, "translations", "batches")
 TM_PATH = os.path.join(REPO, "translations", "tm.json")
 # Batch prices, $ per million tokens (50% of standard). Cache writes are

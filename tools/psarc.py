@@ -173,6 +173,28 @@ def cmd_extract(path, outdir):
     p.close()
 
 
+def extract_some(p, outdir, wanted):
+    """Extract only the entries in `wanted` (paths relative to the archive
+    root; an item ending in "/" takes everything under that folder) that are
+    not already in OUTDIR. Returns the number of files written."""
+    exact = {w for w in wanted if not w.endswith("/")}
+    prefixes = tuple(w for w in wanted if w.endswith("/"))
+    n = 0
+    for e in p.entries[1:]:
+        rel = e.name.lstrip("/").replace("\\", "/")
+        if rel not in exact and not (prefixes and rel.startswith(prefixes)):
+            continue
+        dst = os.path.join(outdir, *rel.split("/"))
+        if os.path.exists(dst):
+            continue
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, "wb") as out:
+            for _, _, _, data in p.iter_entry_blocks(e):
+                out.write(data)
+        n += 1
+    return n
+
+
 def compress_block(data):
     """Return the stored form of one block exactly as the original packer did."""
     if len(data) == 0:
@@ -185,19 +207,22 @@ def compress_block(data):
 
 def cmd_pack(template, indir, outpath, base=None):
     """Pack INDIR using TEMPLATE for names/order/flags. Files missing from
-    INDIR are taken from BASE (the pristine extract), so a build tree only
-    needs the files that changed."""
+    INDIR are taken from BASE (the pristine extract) when it has them, else
+    from TEMPLATE itself, so neither needs a full extract."""
     t = Psarc(template)
     names = [e.name for e in t.entries[1:]]
     manifest = "\n".join(names).encode("utf-8")
     bodies = [manifest]
-    for n in names:
+    for e, n in zip(t.entries[1:], names):
         rel = n.lstrip("/").replace("\\", "/")
         src = os.path.join(indir, *rel.split("/"))
-        if base is not None and not os.path.exists(src):
+        if not os.path.exists(src) and base is not None:
             src = os.path.join(base, *rel.split("/"))
-        with open(src, "rb") as f:
-            bodies.append(f.read())
+        if os.path.exists(src):
+            with open(src, "rb") as f:
+                bodies.append(f.read())
+        else:
+            bodies.append(t.read_entry(e))
     bs = t.block_size
     # First pass: compress everything, build block table. Identical file
     # bodies share one block run (the original packer deduplicates).

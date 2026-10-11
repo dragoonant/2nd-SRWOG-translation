@@ -33,8 +33,11 @@ import sys
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import psarc  # noqa: E402
+
 REPO = os.path.dirname(HERE)
-DEFAULT_WORK = r"C:\Users\you\srw2og-work"
+DEFAULT_WORK = os.path.join(os.path.expanduser("~"), "srw2og-work")
 PY = sys.executable
 
 TOOL_FOR_FORMAT = {
@@ -53,6 +56,18 @@ def run(args):
     if r.returncode != 0:
         raise RuntimeError("%s failed:\n%s%s" % (" ".join(args), r.stdout, r.stderr))
     return r.stdout
+
+
+_archives = {}
+
+
+def ensure_extracted(work, archive, wanted):
+    """Make sure WORK/ext/<archive> has the files in `wanted` (a path inside
+    the archive, or a folder ending in "/"), pulling them out of
+    WORK/dec/<archive>.psarc on demand. A full extract is never needed."""
+    if archive not in _archives:
+        _archives[archive] = psarc.Psarc(os.path.join(work, "dec", archive + ".psarc"))
+    psarc.extract_some(_archives[archive], os.path.join(work, "ext", archive), wanted)
 
 
 def worksheet_has_edits(ws):
@@ -100,6 +115,8 @@ def build(work, out, only=None, check_only=False, no_eboot=False):
             print("would build %s/%s" % (archive, inner))
             continue
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if archive != "EBOOT":
+            ensure_extracted(work, archive, [inner])
         try:
             run([os.path.join(HERE, tool), "build", orig, jpath, dst])
         except RuntimeError as e:
@@ -125,6 +142,7 @@ def build(work, out, only=None, check_only=False, no_eboot=False):
         orig = os.path.join(work, "ext", archive, *inner.split("/"))
         dst = os.path.join(tree, archive, *inner.split("/"))
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        ensure_extracted(work, archive, [inner])
         run([os.path.join(HERE, args[0])] + [a.format(orig=orig, dst=dst) for a in args[1:]])
         touched.setdefault(archive, []).append(inner)
         print("generated %s/%s" % (archive, inner))
@@ -135,6 +153,7 @@ def build(work, out, only=None, check_only=False, no_eboot=False):
         st_dst = os.path.join(tree, "Common", "Dat", "SceneTitle")
         stage_ws = os.path.join(REPO, "worksheets", "Logic", "Dat", "FixedData", "StageData.dat.json")
         print("rendering stage title cards...")
+        ensure_extracted(work, "Common", ["Dat/SceneTitle/"])
         run([os.path.join(HERE, "scene_title.py"), "render", st_orig, st_dst, stage_ws])
         n = 0
         for root, _, files in os.walk(st_dst):
@@ -165,6 +184,7 @@ def build(work, out, only=None, check_only=False, no_eboot=False):
         run([os.path.join(HERE, "psarc.py"), "pack", template, os.path.join(tree, archive), psarc_out, base])
         print("encrypting %s..." % archive)
         print(run([os.path.join(HERE, "sdat.py"), "encrypt", sdat_template, psarc_out, sdat_out]).strip())
+        os.remove(psarc_out)  # intermediate; the .sdat is the deliverable
     if "EBOOT" in touched:
         shutil.copy2(os.path.join(out, "USRDIR", "EBOOT.elf"), os.path.join(out, "USRDIR", "EBOOT.BIN"))
         print("EBOOT.elf copied as EBOOT.BIN (RPCS3 loads a plain ELF)")
