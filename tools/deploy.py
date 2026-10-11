@@ -22,6 +22,8 @@ Usage:
   deploy.py status              show which disc files differ from pristine
 Options: --rpcs3 DIR (default %USERPROFILE%\\RPCS3)
          --pristine DIR (default %USERPROFILE%\\srw2og-work\\pristine\\USRDIR)
+         --disc USRDIR (the game's PS3_GAME\\USRDIR, if it is not in
+                RPCS3's dev_hdd0\\disc\\BLJS10133 folder)
 After install or rollback: boot the game and confirm the install prompt
 (Cross on that system dialog; the game's own menus use Circle).
 """
@@ -34,10 +36,11 @@ SERIAL = "BLJS10133"
 DEFAULT_RPCS3 = os.path.join(os.path.expanduser("~"), "RPCS3")
 DEFAULT_PRISTINE = os.path.join(os.path.expanduser("~"), "srw2og-work", "pristine", "USRDIR")
 ARCHIVES = ["Logic", "Common", "General2d", "General3d", "Battle"]
+DISC = None  # --disc: the game's USRDIR when it is not in RPCS3's disc folder
 
 
 def disc_usrdir(rpcs3):
-    return os.path.join(rpcs3, "dev_hdd0", "disc", SERIAL, "PS3_GAME", "USRDIR")
+    return DISC or os.path.join(rpcs3, "dev_hdd0", "disc", SERIAL, "PS3_GAME", "USRDIR")
 
 
 def wipe_installed(rpcs3):
@@ -134,14 +137,17 @@ def status(rpcs3, pristine):
 
 
 def main(argv):
+    global DISC
     rpcs3, pristine = DEFAULT_RPCS3, DEFAULT_PRISTINE
-    for flag in ("--rpcs3", "--pristine"):
+    for flag in ("--rpcs3", "--pristine", "--disc"):
         if flag in argv:
             i = argv.index(flag)
             if flag == "--rpcs3":
                 rpcs3 = argv[i + 1]
-            else:
+            elif flag == "--pristine":
                 pristine = argv[i + 1]
+            else:
+                DISC = argv[i + 1]
             del argv[i:i + 2]
     cmd = argv[1] if len(argv) > 1 else ""
     if cmd == "install":

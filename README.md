@@ -16,124 +16,75 @@ Japanese.
 
 ## What you need
 
-- **Your own copy of the game.** This repo contains no game data. You build the patch from
-  your own dump of the Japanese disc (BLJS10133).
-- **RPCS3**, with PS3 firmware installed, and the game booting in Japanese.
-- **Windows 10 or 11.** The build uses two Windows fonts (Bahnschrift and Arial Bold) to
-  draw the English text inside pictures.
-- **Python 3.10 or newer**, with two packages:
-  ```bash
-  pip install pycryptodome pillow
-  ```
-- About 25 GB of free disk space for the working files.
+- **Your own copy of the game**, unpacked into a folder (not an ISO file; see below). This
+  repo contains no game data: the installer builds the patch from your copy.
+- **RPCS3**, with the PS3 firmware installed and the game booting in Japanese.
+- **Windows 10 or 11.**
+- **Python 3.10 or newer** from [python.org](https://www.python.org/downloads/). In the
+  Python installer, tick **Add python.exe to PATH**.
+- About **13 GB** of free disk space for the installer's work folder.
 
 Real PS3 hardware is not supported.
 
 ## Installing
 
-### 1. Download the patch
+1. **Download the patch.** On this page click **Code → Download ZIP**, and unzip it anywhere.
+2. **Make sure the game is unpacked.** RPCS3 should list it from a folder like
+   `RPCS3\dev_hdd0\disc\BLJS10133\`, with `PS3_GAME` inside. If you only have an ISO,
+   open it with [7-Zip](https://www.7-zip.org/) and extract everything into that folder,
+   then boot the game once in RPCS3.
+3. **Double-click `Install.bat`.** It finds RPCS3 and the game by itself (or asks you where
+   they are), and offers to install the two Python packages it needs. The first run takes
+   about 20 minutes. When it says **Done**, start the game in RPCS3: it is in English.
 
-Click **Code → Download ZIP** on this page and unzip it, or clone it:
+If the game asks to install data on its first boot, confirm with **Cross**. In the game's
+own menus, **Circle** confirms.
 
-```bash
-git clone https://github.com/dragoonant/2nd-SRWOG-translation.git
-```
+What the installer does, step by step:
 
-The commands below assume you are in that folder, in PowerShell.
+1. Checks that your game files are the original Japanese release and makes a backup copy
+   in a work folder (`srw2og-work` in your user folder).
+2. Decrypts the game's EBOOT using your own RPCS3 and firmware.
+3. Unpacks the game archives and builds the English files.
+4. Copies them into your game, with the file dates the game checks on every boot.
 
-### 2. Put the game where RPCS3 can see it
-
-The installer expects the game as an extracted disc folder inside RPCS3:
-
-```
-<RPCS3>\dev_hdd0\disc\BLJS10133\PS3_GAME\USRDIR\EBOOT.BIN
-<RPCS3>\dev_hdd0\disc\BLJS10133\PS3_GAME\USRDIR\PSARC\*.psarc.sdat
-```
-
-If you have an ISO, open it (or mount it) and copy its contents into
-`<RPCS3>\dev_hdd0\disc\BLJS10133\`. Boot the game once in RPCS3 and let it finish its
-first-time data install, so you know your copy works.
-
-### 3. Decrypt the EBOOT
-
-In RPCS3, choose **Utilities → Decrypt PS3 Binaries** and pick
-`PS3_GAME\USRDIR\EBOOT.BIN`. RPCS3 writes `EBOOT.elf` next to it. This needs the
-firmware keys from your own RPCS3 install, so the patch cannot do it for you.
-
-### 4. Set up a working folder
-
-The build reads the original files from a working folder and never changes your game until
-step 6. Set two variables (change the paths to suit your PC):
-
-```powershell
-$RPCS3 = "C:\RPCS3"
-$WORK  = "C:\srw2og-work"
-```
-
-Then copy the originals in and unpack them. This takes a few minutes:
-
-```powershell
-$USR = "$RPCS3\dev_hdd0\disc\BLJS10133\PS3_GAME\USRDIR"
-New-Item -ItemType Directory -Force "$WORK\pristine\USRDIR\PSARC", "$WORK\dec", "$WORK\ext" | Out-Null
-Copy-Item "$USR\EBOOT.BIN", "$USR\EBOOT.elf" "$WORK\pristine\USRDIR\"
-foreach ($a in "Logic","Common","General2d","General3d","Battle") {
-  Copy-Item "$USR\PSARC\$a.psarc.sdat" "$WORK\pristine\USRDIR\PSARC\"
-  python tools\sdat.py decrypt "$WORK\pristine\USRDIR\PSARC\$a.psarc.sdat" "$WORK\dec\$a.psarc"
-  python tools\psarc.py extract "$WORK\dec\$a.psarc" "$WORK\ext\$a"
-}
-```
-
-`pristine` now holds untouched copies of your game files. Keep it: the uninstall step
-restores from it.
-
-### 5. Build the patch
-
-```powershell
-python tools\build.py --work $WORK --out build
-```
-
-When it finishes it prints `done: N archive(s), 0 problem(s)`. The patched files are in
-`build\USRDIR\`.
-
-### 6. Install it into RPCS3
-
-```powershell
-python tools\deploy.py install build --rpcs3 $RPCS3 --pristine "$WORK\pristine\USRDIR"
-```
-
-This copies the patched `EBOOT.BIN` and archives into your disc folder and into the game's
-installed data folder, with the timestamps the game checks. Boot the game in RPCS3 and it
-starts in English.
-
-If you never let the game do its first-time install (step 2), it does it now from the
-patched files. Confirm the install prompt with **Cross**. In the game's own menus,
-**Circle** confirms.
+Your game is changed only in the last step, and the backup lets you undo it.
 
 ### Updating
 
-Download the new version (or `git pull`), then repeat steps 5 and 6. The working folder
-from step 4 is reused.
+Download the new version, unzip it, and double-click `Install.bat` again. It reuses the
+work folder, so updates take about 15 minutes.
 
 ### Uninstalling
 
-```powershell
-python tools\deploy.py rollback --rpcs3 $RPCS3 --pristine "$WORK\pristine\USRDIR"
+Double-click `Uninstall.bat`. It puts every original file back from the backup. You can
+then delete the `srw2og-work` folder.
+
+### Options
+
+Run the installer from a command prompt to pass options:
+
+```bash
+python install.py --rpcs3 "D:\Emulators\RPCS3" --game "D:\Games\BLJS10133" --work "D:\srw2og-work"
 ```
 
-This puts every original file back. `deploy.py status` shows which files are patched.
+- `--rpcs3`: the folder that holds `rpcs3.exe`.
+- `--game`: the folder that holds `PS3_GAME`.
+- `--work`: where the backup and build files go.
+- `--uninstall`: restore the original files.
 
-### If the game says its data is corrupted
+### Troubleshooting
 
-The game checks the size and date of its archives on every boot and shows
-「ゲームデータが壊れています」 if the disc copy and the installed copy disagree. The installer
-keeps them in step. If you copied files by hand, run step 6 again. If that does not help,
-reinstall the game data from scratch:
-
-```powershell
-python tools\deploy.py install build --rpcs3 $RPCS3 --pristine "$WORK\pristine\USRDIR" --reinstall
-```
-
-Then boot the game and let it reinstall (about 10 minutes).
+- **"is not the original file from the Japanese release"**: another patch was applied
+  to the game, or the dump differs. Restore the original files (or dump the disc again)
+  and run the installer again.
+- **"RPCS3 could not decrypt the EBOOT"**: install the PS3 firmware in RPCS3
+  (**File → Install Firmware**) and check the game boots.
+- **The game says its data is corrupted (「ゲームデータが壊れています」)**: the game
+  compares the size and date of its archives with its installed copy on every boot. Run
+  `Install.bat` again. If that does not help, run
+  `python tools\deploy.py install "%USERPROFILE%\srw2og-work\build" --reinstall`, boot the
+  game and let it reinstall its data (about 10 minutes).
 
 ## Design choices
 
@@ -235,7 +186,9 @@ happening. For text problems, quote the line.
 ## For contributors
 
 - `worksheets/` holds the translation: one JSON file per game file, with the Japanese, the
-  English and each string's budget. Edit the `en` fields, then rebuild.
+  English and each string's budget. Edit the `en` fields, then rebuild and install with
+  `python install.py`, or build without installing with
+  `python tools\build.py --work "%USERPROFILE%\srw2og-work" --out build`.
 - `tools/` holds the Python tools. Each script explains its usage at the top.
   `tools/fitcheck.py` checks widths and glossary use.
 - `glossary/` holds the names, `textures/` the picture-text specs, `docs/` the file formats.
@@ -249,3 +202,8 @@ happening. For text problems, quote the line.
   the Akurasu SRW wiki.
 - *Super Robot Wars* belongs to Bandai Namco Entertainment. This is an unofficial fan
   project. Please buy the game.
+
+## Licence
+
+The installer, tools and documentation are under the [MIT licence](LICENSE). The game and
+its contents are not ours and are not included.

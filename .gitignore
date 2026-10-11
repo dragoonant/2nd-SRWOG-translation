@@ -10,6 +10,8 @@
 *.elf
 *.ELF
 EBOOT.*
+# ...but the EBOOT's translation worksheet is ours
+!worksheets/EBOOT.elf.json
 PS3_GAME/
 work/
 build/
