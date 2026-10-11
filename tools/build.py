@@ -34,7 +34,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-DEFAULT_WORK = r"C:\Users\you\srw2og-work"
+DEFAULT_WORK = os.path.join(os.path.expanduser("~"), "srw2og-work")
 PY = sys.executable
 
 TOOL_FOR_FORMAT = {

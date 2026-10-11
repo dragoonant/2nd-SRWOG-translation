@@ -243,7 +243,7 @@ happening. For text problems, quote the line.
 
 ## Credits
 
-- Translation project: evilgouki (dragoonant), with tools and the first-pass translation by
+- Translation project: evilgouki, with tools and the first-pass translation by
   Claude (Anthropic).
 - Naming follows the *OG: Original Generations* PS2 fan translation, and is checked against
   the Akurasu SRW wiki.

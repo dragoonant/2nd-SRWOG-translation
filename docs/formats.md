@@ -157,7 +157,7 @@ and defeat conditions, stage title. Width tag seen: `<W=63>　</W>`.
 
 ## Build and deploy
 
-`work/` layout (outside OneDrive, `C:\Users\you\srw2og-work`):
+`work/` layout (outside OneDrive, `%USERPROFILE%\srw2og-work`):
 
 ```
 pristine/USRDIR/...      untouched game files + SHA256SUMS.txt

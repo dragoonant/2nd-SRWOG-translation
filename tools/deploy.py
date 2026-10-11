@@ -20,8 +20,8 @@ Usage:
   deploy.py install BUILD_DIR   BUILD_DIR/USRDIR/{EBOOT.BIN, PSARC/*.psarc.sdat}
   deploy.py rollback            restore every pristine file
   deploy.py status              show which disc files differ from pristine
-Options: --rpcs3 DIR (default C:\\Users\\you\\RPCS3)
-         --pristine DIR (default C:\\Users\\you\\srw2og-work\\pristine\\USRDIR)
+Options: --rpcs3 DIR (default %USERPROFILE%\\RPCS3)
+         --pristine DIR (default %USERPROFILE%\\srw2og-work\\pristine\\USRDIR)
 After install or rollback: boot the game and confirm the install prompt
 (Cross on that system dialog; the game's own menus use Circle).
 """
@@ -31,8 +31,8 @@ import shutil
 import sys
 
 SERIAL = "BLJS10133"
-DEFAULT_RPCS3 = r"C:\Users\you\RPCS3"
-DEFAULT_PRISTINE = r"C:\Users\you\srw2og-work\pristine\USRDIR"
+DEFAULT_RPCS3 = os.path.join(os.path.expanduser("~"), "RPCS3")
+DEFAULT_PRISTINE = os.path.join(os.path.expanduser("~"), "srw2og-work", "pristine", "USRDIR")
 ARCHIVES = ["Logic", "Common", "General2d", "General3d", "Battle"]
 
 

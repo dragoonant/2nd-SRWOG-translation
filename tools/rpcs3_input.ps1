@@ -25,7 +25,7 @@ foreach ($k in ($Keys -split ',')) {
     Press $map[$k]
 }
 if ($Shot) {
-    $dir = "C:\Users\you\RPCS3\screenshots\BLJS10133"
+    $dir = "$env:USERPROFILE\RPCS3\screenshots\BLJS10133"
     $before = (Get-ChildItem $dir -ErrorAction SilentlyContinue | Measure-Object).Count
     Press $map['F12']
     for ($i = 0; $i -lt 20; $i++) {

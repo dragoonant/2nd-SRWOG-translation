@@ -39,7 +39,7 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_FONT = r"C:\Users\you\srw2og-work\ext\Common\Dat\Font\font.bin"
+DEFAULT_FONT = os.path.join(os.path.expanduser("~"), "srw2og-work", "ext", "Common", "Dat", "Font", "font.bin")
 TAG = re.compile(r"<[^<>]*>")
 FMT_TAG = re.compile(r"<(?:/[^<>]*|[^<>]*=[^<>]*)>")
 PRINTF = re.compile(r"%[-+#0]?\d*(?:\.\d+)?[hl]?[diouxXfcs]")

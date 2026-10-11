@@ -88,7 +88,7 @@ instead of inside interactive sessions. Faster and cheaper for 87,000 strings; n
 
 1. Build the names table from the PS2 patches. Two sources, cross-checked:
    - Dump the English pilot, unit, weapon, Spirit, skill and terrain tables from patched OGs and
-     OG Gaiden ISOs (evilgouki applies the patches to his own PS2 dumps; Claude writes the dumper).
+     OG Gaiden ISOs (evilgouki applies the patches to their own PS2 dumps; Claude writes the dumper).
    - The Akurasu wiki pages documenting those patches, as a secondary check.
 2. For 2nd OG-only characters, units and attacks (the Masou Kishin cast beyond what Gaiden had,
    the MX and Alpha 3 guests, the new antagonists), propose a romanization table and get
